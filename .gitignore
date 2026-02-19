@@ -1,0 +1,4 @@
+.env
+project-instructions/
+node_modules
+dist
