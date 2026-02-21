@@ -10,10 +10,10 @@ import { AccountRecord } from './types';
 
 @Injectable()
 export class AccountRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async personExists(personId: PersonId): Promise<boolean> {
-    const count = await this.prisma.person.count({
+    const count = await this.prismaService.person.count({
       where: { personId },
     });
     return count > 0;
@@ -25,7 +25,7 @@ export class AccountRepository {
       'personId' | 'accountType' | 'dailyWithdrawalLimit'
     >,
   ): Promise<AccountRecord> {
-    const account = await this.prisma.account.create({
+    const account = await this.prismaService.account.create({
       data: {
         personId: accountInput.personId,
         accountType: accountInput.accountType,
@@ -45,7 +45,7 @@ export class AccountRepository {
   }
 
   async getAccountById(accountId: AccountId): Promise<AccountRecord | null> {
-    const account = await this.prisma.account.findUnique({
+    const account = await this.prismaService.account.findUnique({
       where: { accountId: accountId as number },
     });
 
@@ -61,7 +61,7 @@ export class AccountRepository {
   }
 
   async blockAccount(accountId: AccountId): Promise<AccountRecord | null> {
-    const account = await this.prisma.account.update({
+    const account = await this.prismaService.account.update({
       where: { accountId: accountId as number },
       data: { activeFlag: false },
     });
