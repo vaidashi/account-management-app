@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PersonId, asAccountId, asPersonId } from '../common/branded-types';
+import {
+  AccountId,
+  PersonId,
+  asAccountId,
+  asPersonId,
+} from '../common/branded-types';
 import { AccountRecord } from './types';
 
 @Injectable()
@@ -28,6 +33,37 @@ export class AccountRepository {
         balance: 0, // New accounts start with a balance of 0
         activeFlag: true, // New accounts are active by default
       },
+    });
+
+    return {
+      ...account,
+      accountId: asAccountId(account.accountId),
+      personId: asPersonId(account.personId),
+      balance: account.balance.toNumber(),
+      dailyWithdrawalLimit: account.dailyWithdrawalLimit.toNumber(),
+    };
+  }
+
+  async getAccountById(accountId: AccountId): Promise<AccountRecord | null> {
+    const account = await this.prisma.account.findUnique({
+      where: { accountId: accountId as number },
+    });
+
+    if (!account) return null;
+
+    return {
+      ...account,
+      accountId: asAccountId(account.accountId),
+      personId: asPersonId(account.personId),
+      balance: account.balance.toNumber(),
+      dailyWithdrawalLimit: account.dailyWithdrawalLimit.toNumber(),
+    };
+  }
+
+  async blockAccount(accountId: AccountId): Promise<AccountRecord | null> {
+    const account = await this.prisma.account.update({
+      where: { accountId: accountId as number },
+      data: { activeFlag: false },
     });
 
     return {
