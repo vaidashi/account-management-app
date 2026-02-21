@@ -11,3 +11,8 @@ export type AccountRecord = {
 };
 
 export type CreateAccountError = { code: 'PERSON_NOT_FOUND'; message: string };
+
+export type AccountNotFoundError = {
+  code: 'ACCOUNT_NOT_FOUND';
+  message: string;
+};

@@ -2,8 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { AccountRepository } from './account.repository';
 import { Result, err, ok } from '../common/result';
 import { CreateAccountDto } from './dto/create-account.dto';
-import { asPersonId } from '../common/branded-types';
-import { AccountRecord, CreateAccountError } from './types';
+import { asPersonId, asAccountId } from '../common/branded-types';
+import {
+  AccountRecord,
+  CreateAccountError,
+  AccountNotFoundError,
+} from './types';
 
 @Injectable()
 export class AccountService {
@@ -24,6 +28,30 @@ export class AccountService {
       ...accountInput,
       personId,
     });
+
+    return ok(account);
+  }
+
+  async getBalance(
+    accountId: number,
+  ): Promise<Result<number, AccountNotFoundError>> {
+    const account = await this.repo.getAccountById(asAccountId(accountId));
+
+    if (!account) {
+      return err({ code: 'ACCOUNT_NOT_FOUND', message: 'Account not found' });
+    }
+
+    return ok(account.balance);
+  }
+
+  async blockAccount(
+    accountId: number,
+  ): Promise<Result<AccountRecord, AccountNotFoundError>> {
+    const account = await this.repo.blockAccount(asAccountId(accountId));
+
+    if (!account) {
+      return err({ code: 'ACCOUNT_NOT_FOUND', message: 'Account not found' });
+    }
 
     return ok(account);
   }
