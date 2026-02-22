@@ -1,4 +1,5 @@
-import { Body, Controller, Post, Param, Patch, Get } from '@nestjs/common';
+import { Body, Controller, Post, Param, Patch, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AccountService } from './account.service';
 import {
   CreateAccountSchema,
@@ -17,15 +18,18 @@ export class AccountController {
   @Post()
   async createAccount(
     @Body(new ZodValidationPipe(CreateAccountSchema)) body: CreateAccountDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.service.createAccount(body);
 
     if (!result.ok) {
       switch (result.error.code) {
         case 'PERSON_NOT_FOUND':
+          res.status(404);
           return { statusCode: 404, message: result.error.message };
       }
 
+      res.status(500);
       return { statusCode: 500, message: 'Unhandled error' };
     }
 
@@ -35,15 +39,18 @@ export class AccountController {
   @Get(':accountId/balance')
   async getBalance(
     @Param(new ZodValidationPipe(AccountParamsSchema)) params: AccountParamsDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.service.getBalance(params.accountId);
 
     if (!result.ok) {
       switch (result.error.code) {
         case 'ACCOUNT_NOT_FOUND':
+          res.status(404);
           return { statusCode: 404, message: result.error.message };
       }
 
+      res.status(500);
       return { statusCode: 500, message: 'Unhandled error' };
     }
 
@@ -53,15 +60,18 @@ export class AccountController {
   @Patch(':accountId/block')
   async blockAccount(
     @Param(new ZodValidationPipe(AccountParamsSchema)) params: AccountParamsDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.service.blockAccount(params.accountId);
 
     if (!result.ok) {
       switch (result.error.code) {
         case 'ACCOUNT_NOT_FOUND':
+          res.status(404);
           return { statusCode: 404, message: result.error.message };
       }
 
+      res.status(500);
       return { statusCode: 500, message: 'Unhandled error' };
     }
 

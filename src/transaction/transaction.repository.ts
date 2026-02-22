@@ -14,6 +14,7 @@ export class TransactionRepository {
       data: {
         accountId: transactionInput.accountId,
         value: new Decimal(transactionInput.value),
+        transactionDate: new Date(),
       },
     });
   }
@@ -34,6 +35,7 @@ export class TransactionRepository {
       data: {
         accountId: transactionInput.accountId,
         value: new Decimal(-transactionInput.value),
+        transactionDate: new Date(),
       },
     });
   }
@@ -49,6 +51,9 @@ export class TransactionRepository {
         transactionDate: {
           gte: start,
           lte: end,
+        },
+        value: {
+          lt: 0,
         },
       },
       _sum: {
