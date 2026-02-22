@@ -10,3 +10,9 @@ export type TransactionRecord = {
   value: Money;
   transactionDate: Date;
 };
+
+export type WithdrawError =
+  | { code: 'ACCOUNT_NOT_FOUND'; message: string }
+  | { code: 'ACCOUNT_BLOCKED'; message: string }
+  | { code: 'INSUFFICIENT_FUNDS'; message: string }
+  | { code: 'DAILY_LIMIT_EXCEEDED'; message: string };

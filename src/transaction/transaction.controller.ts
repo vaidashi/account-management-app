@@ -7,6 +7,7 @@ import {
   AccountParamsDto,
 } from '../account/dto/account-params.dto';
 import { asAccountId, asMoney } from 'src/common/branded-types';
+import { WithdrawSchema, WithdrawDto } from './dto/withdraw.dto';
 
 @Controller('accounts')
 export class TransactionController {
@@ -28,6 +29,35 @@ export class TransactionController {
           return { statusCode: 404, message: result.error.message };
         case 'ACCOUNT_BLOCKED':
           return { statusCode: 403, message: result.error.message };
+        default:
+          const _exhaustive: never = result.error;
+          throw new Error(`Unhandled error code: ${(_exhaustive as any).code}`);
+      }
+    }
+
+    return result.value;
+  }
+
+  @Post(':accountId/withdraw')
+  async withdraw(
+    @Param(new ZodValidationPipe(AccountParamsSchema)) params: AccountParamsDto,
+    @Body(new ZodValidationPipe(WithdrawSchema)) body: WithdrawDto,
+  ) {
+    const result = await this.service.withdraw({
+      accountId: asAccountId(params.accountId),
+      value: asMoney(body.value),
+    });
+
+    if (!result.ok) {
+      switch (result.error.code) {
+        case 'ACCOUNT_NOT_FOUND':
+          return { statusCode: 404, message: result.error.message };
+        case 'ACCOUNT_BLOCKED':
+          return { statusCode: 403, message: result.error.message };
+        case 'INSUFFICIENT_FUNDS':
+          return { statusCode: 422, message: result.error.message };
+        case 'DAILY_LIMIT_EXCEEDED':
+          return { statusCode: 422, message: result.error.message };
         default:
           const _exhaustive: never = result.error;
           throw new Error(`Unhandled error code: ${(_exhaustive as any).code}`);

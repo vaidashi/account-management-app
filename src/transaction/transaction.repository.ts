@@ -26,4 +26,37 @@ export class TransactionRepository {
       },
     });
   }
+
+  async createWithdrawal(
+    transactionInput: Pick<TransactionRecord, 'accountId' | 'value'>,
+  ) {
+    return this.prismaService.transaction.create({
+      data: {
+        accountId: transactionInput.accountId,
+        value: new Decimal(-transactionInput.value),
+      },
+    });
+  }
+
+  async getWithdrawnTodayTotal(
+    accountId: Pick<TransactionRecord, 'accountId'>,
+    start: Date,
+    end: Date,
+  ) {
+    const result = await this.prismaService.transaction.aggregate({
+      where: {
+        accountId: accountId.accountId,
+        transactionDate: {
+          gte: start,
+          lte: end,
+        },
+      },
+      _sum: {
+        value: true,
+      },
+    });
+
+    const sum = result._sum.value?.toNumber() ?? 0;
+    return Math.abs(sum);
+  }
 }
