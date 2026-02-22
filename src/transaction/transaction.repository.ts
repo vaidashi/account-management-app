@@ -59,4 +59,34 @@ export class TransactionRepository {
     const sum = result._sum.value?.toNumber() ?? 0;
     return Math.abs(sum);
   }
+
+  async getStatement(
+    accountId: Pick<TransactionRecord, 'accountId'>,
+    limit: number,
+    offset: number,
+    from?: Date,
+    to?: Date,
+  ) {
+    const where = { accountId: accountId.accountId } as const;
+
+    if (from || to) {
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      if (from) dateFilter.gte = from;
+      if (to) dateFilter.lte = to;
+      // @ts-expect-error: Prisma type inferred by client
+      where.transactionDate = dateFilter;
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prismaService.transaction.findMany({
+        where,
+        orderBy: { transactionDate: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      this.prismaService.transaction.count({ where }),
+    ]);
+
+    return { rows, total };
+  }
 }

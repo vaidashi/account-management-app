@@ -1,20 +1,20 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
+import { BaseExceptionFilter, HttpAdapterHost } from '@nestjs/core';
 
 type DomainError = { code: string; message: string };
 
 @Catch()
-export class DomainExceptionFilter implements ExceptionFilter {
+export class DomainExceptionFilter extends BaseExceptionFilter {
+  constructor(adapterHost: HttpAdapterHost) {
+    super(adapterHost.httpAdapter);
+  }
+
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
     const error = exception as DomainError;
 
     if (error?.code) {
+      const ctx = host.switchToHttp();
+      const response = ctx.getResponse();
       response.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
         error: error.code,
         message: error.message,
@@ -22,6 +22,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    throw exception;
+    // Delegate non-domain errors to Nest (prevents crash)
+    super.catch(exception, host);
   }
 }

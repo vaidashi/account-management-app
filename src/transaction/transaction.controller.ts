@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Param } from '@nestjs/common';
+import { Body, Controller, Post, Param, Get, Query } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { DepositSchema, DepositDto } from './dto/deposit.dto';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -8,6 +8,10 @@ import {
 } from '../account/dto/account-params.dto';
 import { asAccountId, asMoney } from 'src/common/branded-types';
 import { WithdrawSchema, WithdrawDto } from './dto/withdraw.dto';
+import {
+  StatementQuerySchema,
+  StatementQueryDto,
+} from './dto/statement-query.dto';
 
 @Controller('accounts')
 export class TransactionController {
@@ -29,10 +33,9 @@ export class TransactionController {
           return { statusCode: 404, message: result.error.message };
         case 'ACCOUNT_BLOCKED':
           return { statusCode: 403, message: result.error.message };
-        default:
-          const _exhaustive: never = result.error;
-          throw new Error(`Unhandled error code: ${(_exhaustive as any).code}`);
       }
+
+      return { statusCode: 500, message: 'Unhandled error' };
     }
 
     return result.value;
@@ -58,9 +61,37 @@ export class TransactionController {
           return { statusCode: 422, message: result.error.message };
         case 'DAILY_LIMIT_EXCEEDED':
           return { statusCode: 422, message: result.error.message };
+      }
+
+      return { statusCode: 500, message: 'Unhandled error' };
+    }
+
+    return result.value;
+  }
+
+  @Get(':accountId/statements')
+  async getStatement(
+    @Param(new ZodValidationPipe(AccountParamsSchema)) params: AccountParamsDto,
+    @Query(new ZodValidationPipe(StatementQuerySchema))
+    query: StatementQueryDto,
+  ) {
+    const fromDate = query.from ? new Date(query.from) : undefined;
+    const toDate = query.to ? new Date(query.to) : undefined;
+
+    const result = await this.service.getStatement(
+      { accountId: asAccountId(params.accountId) },
+      query.limit,
+      query.offset,
+      fromDate,
+      toDate,
+    );
+
+    if (!result.ok) {
+      switch (result.error.code) {
+        case 'ACCOUNT_NOT_FOUND':
+          return { statusCode: 404, message: result.error.message };
         default:
-          const _exhaustive: never = result.error;
-          throw new Error(`Unhandled error code: ${(_exhaustive as any).code}`);
+          throw new Error(`Unhandled error code: ${result.error.code}`);
       }
     }
 
