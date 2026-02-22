@@ -90,4 +90,33 @@ export class TransactionService {
 
     return ok({ newBalance: updated.balance.toNumber() });
   }
+
+  async getStatement(
+    accountId: Pick<TransactionRecord, 'accountId'>,
+    limit: number,
+    offset: number,
+    from?: Date,
+    to?: Date,
+  ) {
+    const account = await this.prismaService.account.findUnique({
+      where: { accountId: accountId.accountId },
+    });
+
+    if (!account) {
+      return err({ code: 'ACCOUNT_NOT_FOUND', message: 'Account not found' });
+    }
+
+    const result = await this.repo.getStatement(
+      accountId,
+      limit,
+      offset,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+
+    return ok({
+      total: result.total,
+      items: result.rows,
+    });
+  }
 }

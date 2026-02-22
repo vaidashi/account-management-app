@@ -25,6 +25,8 @@ export class AccountController {
         case 'PERSON_NOT_FOUND':
           return { statusCode: 404, message: result.error.message };
       }
+
+      return { statusCode: 500, message: 'Unhandled error' };
     }
 
     return result.value;
@@ -41,6 +43,8 @@ export class AccountController {
         case 'ACCOUNT_NOT_FOUND':
           return { statusCode: 404, message: result.error.message };
       }
+
+      return { statusCode: 500, message: 'Unhandled error' };
     }
 
     return { balance: result.value };
@@ -57,6 +61,8 @@ export class AccountController {
         case 'ACCOUNT_NOT_FOUND':
           return { statusCode: 404, message: result.error.message };
       }
+
+      return { statusCode: 500, message: 'Unhandled error' };
     }
 
     return result.value;
